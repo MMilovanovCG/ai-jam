@@ -501,6 +501,7 @@
 
 <nav class="nav">
   <a href="#title" title="Title"></a>
+  <a href="#how-built" title="How It Was Built"></a>
   <a href="#the-why" title="The Why"></a>
   <a href="#overview" title="Overview"></a>
   <a href="#architecture" title="Architecture"></a>
@@ -511,7 +512,7 @@
   <a href="#real-usage" title="Real Usage"></a>
   <a href="#reactions" title="Reactions"></a>
   <a href="#demo" title="Demo"></a>
-  <a href="#how-built" title="How It Was Built"></a>
+  <a href="#plans" title="What's Next"></a>
   <a href="#qa" title="QA"></a>
 </nav>
 
@@ -538,6 +539,48 @@
   </div>
 </section>
 
+<!-- SLIDE: How It Was Built -->
+<section class="slide" id="how-built">
+  <div class="content">
+
+    <div class="badge badge-purple">Origin Story</div>
+    <h2>How It Was Built</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">No code written. Just ideas and conversation.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>The Process</h3>
+        <ul>
+          <li>Described the problem in plain language to Claude Code</li>
+          <li>Discussed what integrations we had (Slack, Jira, GitHub)</li>
+          <li>Asked "what's the simplest architecture for this?"</li>
+          <li>Iterated on routing logic through conversation</li>
+          <li>Claude wrote all the code — I reviewed intent and direction</li>
+          <li>No IDE, no local dev setup, no debugging sessions</li>
+        </ul>
+      </div>
+      <div>
+        <h3>What I Actually Did</h3>
+        <ul>
+          <li>Described the business problem clearly</li>
+          <li>Defined what "done" looks like for each feature</li>
+          <li>Asked the right questions about edge cases</li>
+          <li>Tested the running bot and gave feedback</li>
+          <li>Decided what was worth building vs skipping</li>
+          <li>That's it. Zero lines of code written by hand.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--accent); margin-top: 32px;">
+      <div class="scenario-title">The Takeaway</div>
+      <p>The value wasn't in writing code faster. It was in being able to go from "this workflow is broken" to "working tool in production" in a single conversation. AI as a thought partner that also happens to implement the ideas.</p>
+    </div>
+  </div>
+</section>
+
 <!-- SLIDE 2: The Why -->
 <section class="slide" id="the-why">
   <div class="content">
@@ -555,22 +598,12 @@
       <p>PRs sitting for days waiting on a human reviewer. Ticket-vs-code drift caught only when someone happened to read both side-by-side.</p>
     </div>
 
-    <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 24px;">
+    <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 16px;">
       <div class="scenario-title">Pilot ending — BugBot &amp; CodeRabbit</div>
       <p>The external review pilots are wrapping up. Without an in-house alternative, we lose the automated first-pass review entirely.</p>
     </div>
 
-    <div class="flow">
-      <div class="flow-step">😤 Punch list chaos</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step">💬 Chat with Claude</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step">🏗️ Architecture ideas</div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-step">⚡ Working bot</div>
-    </div>
-
-    <div class="scenario" style="border-left-color: var(--accent); margin-top: 24px;">
+    <div class="scenario" style="border-left-color: var(--accent); margin-top: 16px;">
       <div class="scenario-title">The Idea</div>
       <p>What if a Slack bot could watch our conversations and automatically turn them into action — reviewing PRs, capturing ideas as tickets, and creating Jira issues from thread discussions? No forms, no context-switching, just natural language.</p>
     </div>
@@ -611,7 +644,7 @@
   <div class="split-layout">
     <div class="text-side">
 <div class="badge badge-purple">Architecture</div>
-      <h2>How It's Built</h2>
+      <h2>Under the Hood</h2>
       <div class="divider"></div>
 
       <div class="flow">
@@ -918,44 +951,30 @@
   </div>
 </section>
 
-<!-- SLIDE: How It Was Built -->
-<section class="slide" id="how-built">
+<!-- SLIDE: What's Next -->
+<section class="slide" id="plans">
   <div class="content">
 
-    <div class="badge badge-purple">Origin Story</div>
-    <h2>How It Was Built</h2>
+    <div class="badge badge-orange">What's Next</div>
+    <h2>Plans</h2>
     <div class="divider"></div>
 
-    <p class="subtitle">No code written. Just ideas and conversation.</p>
-
-    <div class="two-col">
-      <div>
-        <h3>The Process</h3>
-        <ul>
-          <li>Described the problem in plain language to Claude Code</li>
-          <li>Discussed what integrations we had (Slack, Jira, GitHub)</li>
-          <li>Asked "what's the simplest architecture for this?"</li>
-          <li>Iterated on routing logic through conversation</li>
-          <li>Claude wrote all the code — I reviewed intent and direction</li>
-          <li>No IDE, no local dev setup, no debugging sessions</li>
-        </ul>
+    <div class="cards" style="grid-template-columns: 1fr 1fr;">
+      <div class="card" style="border-top: 3px solid var(--purple);">
+        <div class="icon">🛠️</div>
+        <h3>Self-Improvement on Code</h3>
+        <p>Today the bot DMs me when it spots a defect in its own pipeline. Next: close the loop — let it open a PR against its own repo with the fix, run the test suite, and post the diff for review. Same review flow it already runs on everyone else's PRs, applied to itself.</p>
       </div>
-      <div>
-        <h3>What I Actually Did</h3>
-        <ul>
-          <li>Described the business problem clearly</li>
-          <li>Defined what "done" looks like for each feature</li>
-          <li>Asked the right questions about edge cases</li>
-          <li>Tested the running bot and gave feedback</li>
-          <li>Decided what was worth building vs skipping</li>
-          <li>That's it. Zero lines of code written by hand.</li>
-        </ul>
+      <div class="card" style="border-top: 3px solid var(--blue);">
+        <div class="icon">🧵</div>
+        <h3>Session-Based Architecture</h3>
+        <p>Today every Slack message spawns a fresh one-shot Claude — no in-process memory between turns, all context re-loaded from disk. Next: persistent sessions per channel/thread so follow-ups skip the cold-start, share running state, and respond noticeably faster.</p>
       </div>
     </div>
 
-    <div class="scenario" style="border-left-color: var(--accent); margin-top: 32px;">
-      <div class="scenario-title">The Takeaway</div>
-      <p>The value wasn't in writing code faster. It was in being able to go from "this workflow is broken" to "working tool in production" in a single conversation. AI as a thought partner that also happens to implement the ideas.</p>
+    <div class="scenario" style="border-left-color: var(--orange); margin-top: 32px;">
+      <div class="scenario-title">💬 Try it &amp; shape what's next</div>
+      <p>Use Digital Helper on your PRs and tickets — just invite the bot to a channel (a private one is preferable). Then join <a href="https://cargurus.enterprise.slack.com/archives/C0AS6N97V4J" style="color: var(--accent); text-decoration: underline;">#digital-helper-ideas-and-suggestions</a> to share what worked, what didn't, and what you'd want it to do next.</p>
     </div>
   </div>
 </section>
