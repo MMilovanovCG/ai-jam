@@ -507,11 +507,12 @@
   <a href="#pr-review" title="PR Review"></a>
   <a href="#dm-assistant" title="DM Assistant"></a>
   <a href="#mentions" title="@Mentions"></a>
+  <a href="#learning-loop" title="Learning Loop"></a>
   <a href="#real-usage" title="Real Usage"></a>
   <a href="#reactions" title="Reactions"></a>
   <a href="#demo" title="Demo"></a>
-  <a href="#qa" title="QA"></a>
   <a href="#how-built" title="How It Was Built"></a>
+  <a href="#qa" title="QA"></a>
 </nav>
 
 <!-- SLIDE 1: Title -->
@@ -529,7 +530,6 @@
         <span class="tag">Claude Code</span>
         <span class="tag">PR Reviews</span>
         <span class="tag">Jira Integration</span>
-        <span class="tag">Docker</span>
       </div>
     </div>
     <div class="image-side">
@@ -545,9 +545,19 @@
     <h2>The Problem I Was Solving</h2>
     <div class="divider"></div>
 
+    <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 16px;">
+      <div class="scenario-title">Punch list chaos</div>
+      <p>Bugs spotted in reviews, product ideas floating in Slack, tasks discussed in threads — none of it making it into Jira. The backlog was falling behind real conversations.</p>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 16px;">
+      <div class="scenario-title">Slow PR reviews</div>
+      <p>PRs sitting for days waiting on a human reviewer. Ticket-vs-code drift caught only when someone happened to read both side-by-side.</p>
+    </div>
+
     <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 24px;">
-      <div class="scenario-title">The Problem</div>
-      <p>We had a growing punch list — bugs spotted in reviews, product ideas floating in Slack, tasks discussed in threads — none of it making it into Jira. Things were getting lost. The backlog was falling behind real conversations.</p>
+      <div class="scenario-title">Pilot ending — BugBot &amp; CodeRabbit</div>
+      <p>The external review pilots are wrapping up. Without an in-house alternative, we lose the automated first-pass review entirely.</p>
     </div>
 
     <div class="flow">
@@ -755,6 +765,54 @@
   </div>
 </section>
 
+<!-- SLIDE: Learning Loop -->
+<section class="slide" id="learning-loop">
+  <div class="content">
+
+    <div class="badge badge-purple">Persistent Memory</div>
+    <h2>The Learning Loop</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">The bot doesn't start from zero every time. Each invocation reads from — and writes back to — a shared memory.</p>
+
+    <div class="flow">
+      <div class="flow-step">📥 Read learnings + recent actions</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">🛠️ Do the task</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">📝 Log action + outcome</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">💡 Capture reusable lesson</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>What Gets Remembered</h3>
+        <ul>
+          <li>Per-day action logs — task, what was done, outcome, channel</li>
+          <li>Reusable patterns — Bolt quirks, Jira field IDs, Mongo aggregation gotchas</li>
+          <li>People & Slack IDs — auto-backfilled from <code>users.info</code> / <code>lookupByEmail</code></li>
+          <li>Project-specific conventions — branch naming, commit format, repo owners</li>
+        </ul>
+      </div>
+      <div>
+        <h3>How It Pays Off</h3>
+        <ul>
+          <li>Caught NPE risk in <code>List.of(...)</code> on a later PR after one slipped past</li>
+          <li>Started flagging mock-only aggregation tests as insufficient coverage</li>
+          <li>Re-uses the trick to find PR-link messages in <code>C07HU6W90MV</code> for reaction flips</li>
+          <li>Knows RTL transition IDs and required fields — no re-discovery per ticket</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--purple); margin-top: 16px;">
+      <div class="scenario-title">Self-Improvement</div>
+      <p>When the bot spots a fixable defect in its own pipeline (a missed edited-message, a silent empty-review failure), it DMs me with root cause + proposed fix and asks for go-ahead. Several real production fixes started this way.</p>
+    </div>
+  </div>
+</section>
+
 <!-- SLIDE: Real Usage -->
 <section class="slide" id="real-usage">
   <div class="content">
@@ -763,32 +821,24 @@
     <h2>How the Team Actually Uses It</h2>
     <div class="divider"></div>
 
-    <p class="subtitle">Pulled from real action logs and learnings — not hypothetical.</p>
+    <p class="subtitle">Pulled from real action logs — not hypothetical.</p>
 
     <div class="cards" style="grid-template-columns: 1fr 1fr;">
       <div class="scenario">
         <div class="scenario-title">🔍 Jira-anchored PR reviews</div>
-        <p>Bot regularly cross-checks PRs in <code>lead-enrichment</code>, <code>site-dealer-dashboard</code>, <code>cg-main</code>, <code>dealer-crm</code> against RTL / DEXP / MIT / CMI tickets. Flags real issues — e.g. PR #386 (RTL-1333): fix targeted symptom not root cause; PR #470 (RTL-1298): catches an <code>Aggregation.project()</code> lambda whose mocked test never executed.</p>
+        <p>Cross-checks PRs in <code>lead-enrichment</code>, <code>site-dealer-dashboard</code>, <code>cg-main</code> against RTL / DEXP / MIT tickets. Caught a fix targeting symptom not root cause (#386), and a mocked aggregation test that never executed (#470).</p>
       </div>
       <div class="scenario">
         <div class="scenario-title">🔄 Multi-round re-reviews</div>
-        <p>PR #372 (MIT-844) went 3 rounds — round 2 caught a TypeScript failure in the spec file (<code>id: '1'</code> vs <code>number</code>, invalid <code>priority: 'NORMAL'</code>) the author missed. Round 3 confirmed all feedback addressed.</p>
+        <p>PR #372 went 3 rounds — round 2 caught a TS failure in the spec file the author missed; round 3 confirmed everything addressed.</p>
       </div>
       <div class="scenario">
-        <div class="scenario-title">🎯 Deep cross-spec validation</div>
-        <p>PR #492 (RTL-1328): bot flagged 3 deviations from the §2.3 / §10 / §12.3 spec — including coin counts derived via in-memory aggregation rather than the documented <code>$inc</code> path, with a perf note for scale.</p>
-      </div>
-      <div class="scenario">
-        <div class="scenario-title">✅ Reaction flips on demand</div>
-        <p>"want to change the icon then?" → bot finds the original PR-link message in <code>C07HU6W90MV</code>, swaps ⚠️ → ✅ via <code>reactions.remove</code> + <code>reactions.add</code>. Routine on PRs #464, #480, #481, #483, #487 once carve-outs are agreed.</p>
-      </div>
-      <div class="scenario">
-        <div class="scenario-title">⚡ Ticket → branch → PR end-to-end</div>
-        <p>RTL-1314 (copy update) and RTL-1315 (endpoint migration) implemented from a Slack thread: bot branched, edited, ran vitest, pushed, opened PRs #344 / #348, then auto-reviewed both against AC.</p>
+        <div class="scenario-title">⚡ Ticket → branch → PR</div>
+        <p>RTL-1314 / RTL-1315 implemented from a Slack thread: branched, edited, ran vitest, opened PRs, then auto-reviewed both against AC.</p>
       </div>
       <div class="scenario">
         <div class="scenario-title">🩹 Conflict resolution</div>
-        <p>PR #185 (RTL-1193): merged origin/main, resolved conflicts in 4 files (package.json, ShopperCard.tsx + spec, yarn.lock), switched <code>Link</code> source from <code>react-router-dom</code> to <code>@remix-run/react</code> to match main, 903 tests green, pushed.</p>
+        <p>PR #185: merged origin/main, resolved conflicts across 4 files, switched <code>Link</code> import to match main, 903 tests green, pushed.</p>
       </div>
     </div>
   </div>
@@ -868,19 +918,7 @@
   </div>
 </section>
 
-<!-- SLIDE 12: QA -->
-<section class="slide" id="qa">
-  <div class="content" style="text-align: center;">
-    <div class="badge badge-red">Q&A</div>
-    <h2>Questions?</h2>
-    <div class="divider" style="margin: 24px auto;"></div>
-    <div class="image-placeholder" style="border: none; background: none; padding: 0;">
-      <img src="images/qa.jpg" alt="Robot holding microphone toward audience for Q&A" style="max-height: 60vh;" />
-    </div>
-  </div>
-</section>
-
-<!-- SLIDE 14: How It Was Built -->
+<!-- SLIDE: How It Was Built -->
 <section class="slide" id="how-built">
   <div class="content">
 
@@ -918,6 +956,18 @@
     <div class="scenario" style="border-left-color: var(--accent); margin-top: 32px;">
       <div class="scenario-title">The Takeaway</div>
       <p>The value wasn't in writing code faster. It was in being able to go from "this workflow is broken" to "working tool in production" in a single conversation. AI as a thought partner that also happens to implement the ideas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: QA -->
+<section class="slide" id="qa">
+  <div class="content" style="text-align: center;">
+    <div class="badge badge-red">Q&A</div>
+    <h2>Questions?</h2>
+    <div class="divider" style="margin: 24px auto;"></div>
+    <div class="image-placeholder" style="border: none; background: none; padding: 0;">
+      <img src="images/qa.jpg" alt="Robot holding microphone toward audience for Q&A" style="max-height: 60vh;" />
     </div>
   </div>
 </section>
