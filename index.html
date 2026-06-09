@@ -57,6 +57,7 @@
     body.dark .badge-purple { background: rgba(139,92,246,0.2); color: #8b5cf6; }
     body.dark code, body.dark .scenario code { background: rgba(233,69,96,0.18); color: #e94560; }
     body.dark .nav a { background: rgba(255,255,255,0.2); }
+    body.dark .nav a:hover, body.dark .nav a.active { background: var(--accent); }
     body.dark .reaction { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
     body.dark .slide-counter,
     body.dark .fullscreen-hint {
@@ -161,11 +162,30 @@
       font-size: 0.8rem;
       z-index: 200;
       pointer-events: none;
-      opacity: 0;
+      opacity: 0.9;
       transition: opacity 0.3s;
       backdrop-filter: blur(8px);
       border: 1px solid var(--card-border);
       box-shadow: 0 2px 12px rgba(0,0,73,0.08);
+    }
+
+    .fullscreen-hint kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      margin: 0 2px;
+      background: var(--bg-alt);
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      box-shadow: 0 1px 0 rgba(0,0,73,0.06);
+    }
+    body.dark .fullscreen-hint kbd {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text);
+      box-shadow: none;
     }
 
     body.fullscreen .fullscreen-hint {
@@ -1066,7 +1086,7 @@
   </div>
 </section>
 
-<div class="fullscreen-hint">Press <strong>Ctrl+F</strong> to exit fullscreen &bull; Arrow keys to navigate</div>
+<div class="fullscreen-hint"><kbd>←</kbd><kbd>→</kbd> navigate &bull; <kbd>Ctrl</kbd>+<kbd>F</kbd> fullscreen &bull; <kbd>Ctrl</kbd>+<kbd>D</kbd> dark mode</div>
 <div class="slide-counter"></div>
 <div class="fullscreen-toast" id="fsToast"></div>
 
