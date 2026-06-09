@@ -5,20 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude Agent — Digital Helper</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
+    /* CarGurus theme (light, default) */
     :root {
+      --bg: #ffffff;
+      --bg-alt: #f7f8fb;
+      --card: #ffffff;
+      --card-border: #e4e4e5;
+      --accent: #04A3FD;       /* CG bright blue */
+      --accent2: #000049;      /* CG navy */
+      --accent3: #05317B;      /* deep navy */
+      --text: #000049;         /* navy primary text */
+      --text-soft: #05317B;
+      --muted: #595959;        /* CG gray */
+      --green: #16c784;
+      --blue: #04A3FD;
+      --orange: #F5333F;       /* CG red repurposed for warm accent */
+      --purple: #05317B;
+      --yellow: #FEDB00;
+      --link: #0069AA;
+    }
+
+    /* Dark mode (Ctrl+D) */
+    body.dark {
       --bg: #0f0f0f;
+      --bg-alt: #14142a;
       --card: #1a1a2e;
+      --card-border: rgba(255,255,255,0.08);
       --accent: #e94560;
-      --accent2: #0f3460;
+      --accent2: #f5f5f7;
+      --accent3: #f59e0b;
       --text: #eee;
+      --text-soft: #ccc;
       --muted: #888;
       --green: #16c784;
       --blue: #3b82f6;
       --orange: #f59e0b;
       --purple: #8b5cf6;
+      --yellow: #FEDB00;
+      --link: #04A3FD;
+    }
+    body.dark .badge-red { background: rgba(233,69,96,0.2); color: #e94560; }
+    body.dark .badge-blue { background: rgba(59,130,246,0.2); color: #3b82f6; }
+    body.dark .badge-green { background: rgba(22,199,132,0.2); color: #16c784; }
+    body.dark .badge-orange { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    body.dark .badge-purple { background: rgba(139,92,246,0.2); color: #8b5cf6; }
+    body.dark code, body.dark .scenario code { background: rgba(233,69,96,0.18); color: #e94560; }
+    body.dark .nav a { background: rgba(255,255,255,0.2); }
+    body.dark .reaction { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
+    body.dark .slide-counter,
+    body.dark .fullscreen-hint {
+      background: rgba(30, 30, 50, 0.9);
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: none;
     }
 
     html {
@@ -33,10 +77,11 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 300;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
     .slide {
@@ -56,12 +101,16 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.08) 0%, transparent 60%);
+      background: radial-gradient(ellipse at 50% 0%, rgba(4,163,253,0.06) 0%, transparent 60%);
       pointer-events: none;
     }
 
     .slide:nth-child(even)::before {
-      background: radial-gradient(ellipse at 50% 100%, rgba(15,52,96,0.15) 0%, transparent 60%);
+      background: radial-gradient(ellipse at 50% 100%, rgba(0,0,73,0.05) 0%, transparent 60%);
+    }
+
+    .slide:nth-child(even) {
+      background: var(--bg-alt);
     }
 
     .content {
@@ -105,7 +154,7 @@
       bottom: 16px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(30, 30, 50, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       color: var(--muted);
       padding: 8px 20px;
       border-radius: 8px;
@@ -115,7 +164,8 @@
       opacity: 0;
       transition: opacity 0.3s;
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 12px rgba(0,0,73,0.08);
     }
 
     body.fullscreen .fullscreen-hint {
@@ -127,7 +177,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(233,69,96,0.9);
+      background: rgba(0,0,73,0.95);
       color: #fff;
       padding: 16px 32px;
       border-radius: 12px;
@@ -149,7 +199,7 @@
       position: fixed;
       bottom: 16px;
       right: 24px;
-      background: rgba(30, 30, 50, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       color: var(--muted);
       padding: 6px 14px;
       border-radius: 8px;
@@ -158,38 +208,44 @@
       opacity: 1;
       transition: opacity 0.3s;
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 2px 12px rgba(0,0,73,0.08);
     }
 
     h1 {
       font-size: 3.5rem;
-      font-weight: 800;
+      font-weight: 600;
       margin-bottom: 24px;
-      background: linear-gradient(135deg, #e94560, #f59e0b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1.2;
+      color: var(--accent2);
+      line-height: 1.15;
+      letter-spacing: -0.5px;
     }
 
     h2 {
       font-size: 2.2rem;
-      font-weight: 700;
+      font-weight: 600;
       margin-bottom: 20px;
-      color: var(--text);
+      color: var(--accent2);
+      letter-spacing: -0.3px;
     }
 
     h3 {
       font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 12px;
-      color: var(--accent);
+      color: var(--accent2);
+    }
+
+    p, li {
+      color: var(--muted);
     }
 
     .subtitle {
       font-size: 1.4rem;
-      color: var(--muted);
+      color: var(--text-soft);
+      font-weight: 300;
       margin-bottom: 40px;
-      max-width: 700px;
+      max-width: 760px;
     }
 
     .badge {
@@ -203,11 +259,11 @@
       margin-bottom: 16px;
     }
 
-    .badge-red { background: rgba(233,69,96,0.2); color: var(--accent); }
-    .badge-blue { background: rgba(59,130,246,0.2); color: var(--blue); }
-    .badge-green { background: rgba(22,199,132,0.2); color: var(--green); }
-    .badge-orange { background: rgba(245,158,11,0.2); color: var(--orange); }
-    .badge-purple { background: rgba(139,92,246,0.2); color: var(--purple); }
+    .badge-red { background: rgba(245,51,63,0.12); color: #F5333F; }
+    .badge-blue { background: rgba(4,163,253,0.12); color: var(--accent); }
+    .badge-green { background: rgba(22,199,132,0.14); color: #109960; }
+    .badge-orange { background: rgba(245,51,63,0.12); color: #F5333F; }
+    .badge-purple { background: rgba(0,0,73,0.10); color: var(--accent2); }
 
     .cards {
       display: grid;
@@ -218,15 +274,17 @@
 
     .card {
       background: var(--card);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 28px;
-      transition: transform 0.2s, border-color 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,73,0.04);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
 
     .card:hover {
       transform: translateY(-4px);
-      border-color: rgba(233,69,96,0.3);
+      border-color: rgba(4,163,253,0.5);
+      box-shadow: 0 8px 24px rgba(0,0,73,0.08);
     }
 
     .card .icon {
@@ -249,13 +307,15 @@
 
     .flow-step {
       background: var(--card);
-      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--accent2);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 16px 20px;
       font-size: 0.95rem;
       display: flex;
       align-items: center;
       gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,73,0.04);
     }
 
     .flow-arrow {
@@ -266,17 +326,19 @@
 
     .scenario {
       background: var(--card);
+      border: 1px solid var(--card-border);
       border-left: 4px solid var(--accent);
       border-radius: 0 12px 12px 0;
       padding: 24px 28px;
       margin: 16px 0;
+      box-shadow: 0 1px 3px rgba(0,0,73,0.04);
     }
 
     .scenario-title {
-      font-weight: 700;
+      font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 8px;
-      color: var(--text);
+      color: var(--accent2);
     }
 
     .scenario p {
@@ -284,12 +346,13 @@
       font-size: 0.95rem;
     }
 
-    .scenario code {
-      background: rgba(233,69,96,0.15);
-      color: var(--accent);
+    code, .scenario code {
+      background: rgba(4,163,253,0.10);
+      color: var(--accent3);
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 0.85rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
 
     .reactions {
@@ -303,7 +366,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.05);
+      background: var(--bg-alt);
+      border: 1px solid var(--card-border);
+      color: var(--accent2);
       border-radius: 8px;
       padding: 8px 14px;
       font-size: 0.9rem;
@@ -312,8 +377,8 @@
     .reaction .emoji { font-size: 1.3rem; }
 
     .image-placeholder {
-      background: linear-gradient(135deg, var(--card), rgba(233,69,96,0.1));
-      border: 2px dashed rgba(233,69,96,0.3);
+      background: linear-gradient(135deg, var(--bg-alt), rgba(4,163,253,0.06));
+      border: 2px dashed rgba(4,163,253,0.3);
       border-radius: 16px;
       padding: 40px;
       text-align: center;
@@ -462,8 +527,8 @@
       padding: 4px 12px;
       border-radius: 6px;
       font-size: 0.8rem;
-      background: rgba(255,255,255,0.06);
-      color: var(--muted);
+      background: rgba(0,0,73,0.06);
+      color: var(--accent2);
     }
 
     .nav {
@@ -481,7 +546,7 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.2);
+      background: rgba(0,0,73,0.18);
       display: block;
       transition: background 0.2s, transform 0.2s;
     }
@@ -495,9 +560,19 @@
     ul { list-style: none; padding: 0; }
     ul li { padding: 6px 0; color: var(--muted); }
     ul li::before { content: '→ '; color: var(--accent); font-weight: bold; }
+
+    .cg-logo {
+      position: fixed;
+      top: 20px;
+      left: 24px;
+      height: 26px;
+      z-index: 150;
+    }
   </style>
 </head>
 <body>
+
+<img class="cg-logo" src="images/CG_Logo_2025.svg" alt="CarGurus" />
 
 <nav class="nav">
   <a href="#title" title="Title"></a>
@@ -1083,12 +1158,32 @@
     }
   });
 
+  // Dark mode (persists across reloads)
+  function applyDarkMode(on) {
+    document.body.classList.toggle('dark', !!on);
+    try { localStorage.setItem('darkMode', on ? '1' : '0'); } catch (e) {}
+  }
+  try {
+    if (localStorage.getItem('darkMode') === '1') {
+      document.body.classList.add('dark');
+    }
+  } catch (e) {}
+
   // Keyboard controls
   document.addEventListener('keydown', (e) => {
     // Ctrl+F to toggle fullscreen
     if (e.ctrlKey && e.key === 'f') {
       e.preventDefault();
       toggleFullscreen();
+      return;
+    }
+
+    // Ctrl+D to toggle dark mode
+    if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) {
+      e.preventDefault();
+      const next = !document.body.classList.contains('dark');
+      applyDarkMode(next);
+      showToast(next ? 'Dark Mode' : 'Light Mode');
       return;
     }
 
