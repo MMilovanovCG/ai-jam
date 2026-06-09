@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Agent — Digital Helper</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a2e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --text: #eee;
+      --muted: #888;
+      --green: #16c784;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --purple: #8b5cf6;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar {
+      display: none;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .slide {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 40px;
+      position: relative;
+      overflow: hidden;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(233,69,96,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .slide:nth-child(even)::before {
+      background: radial-gradient(ellipse at 50% 100%, rgba(15,52,96,0.15) 0%, transparent 60%);
+    }
+
+    .content {
+      max-width: 1000px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Fullscreen mode */
+    body.fullscreen {
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+    }
+
+    body.fullscreen::-webkit-scrollbar {
+      display: none;
+    }
+
+    body.fullscreen .nav {
+      display: flex;
+    }
+
+    body.fullscreen .slide {
+      height: 100vh;
+      min-height: 100vh;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .fullscreen-hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30, 30, 50, 0.9);
+      color: var(--muted);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    body.fullscreen .fullscreen-hint {
+      opacity: 1;
+    }
+
+    .fullscreen-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(233,69,96,0.9);
+      color: #fff;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      z-index: 300;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(8px);
+    }
+
+    .fullscreen-toast.show {
+      opacity: 1;
+    }
+
+    /* Slide counter */
+    .slide-counter {
+      position: fixed;
+      bottom: 16px;
+      right: 24px;
+      background: rgba(30, 30, 50, 0.9);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      z-index: 200;
+      opacity: 1;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #e94560, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 1.4rem;
+      color: var(--muted);
+      margin-bottom: 40px;
+      max-width: 700px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .badge-red { background: rgba(233,69,96,0.2); color: var(--accent); }
+    .badge-blue { background: rgba(59,130,246,0.2); color: var(--blue); }
+    .badge-green { background: rgba(22,199,132,0.2); color: var(--green); }
+    .badge-orange { background: rgba(245,158,11,0.2); color: var(--orange); }
+    .badge-purple { background: rgba(139,92,246,0.2); color: var(--purple); }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 28px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(233,69,96,0.3);
+    }
+
+    .card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+
+    .flow-step {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flow-arrow {
+      color: var(--accent);
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .scenario {
+      background: var(--card);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 24px 28px;
+      margin: 16px 0;
+    }
+
+    .scenario-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .scenario p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .scenario code {
+      background: rgba(233,69,96,0.15);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .reactions {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .reaction {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+    }
+
+    .reaction .emoji { font-size: 1.3rem; }
+
+    .image-placeholder {
+      background: linear-gradient(135deg, var(--card), rgba(233,69,96,0.1));
+      border: 2px dashed rgba(233,69,96,0.3);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      margin: 24px 0;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-placeholder img {
+      max-width: 100%;
+      max-height: 30vh;
+      border-radius: 12px;
+    }
+
+    .image-placeholder .prompt {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      font-style: italic;
+    }
+
+    /* Split layout: text left, image right */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+      max-width: 1400px;
+      width: 100%;
+      height: calc(100vh - 60px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .split-layout .text-side {
+      overflow-y: auto;
+      max-height: calc(100vh - 80px);
+      scrollbar-width: none;
+    }
+
+    .split-layout .text-side::-webkit-scrollbar {
+      display: none;
+    }
+
+    .split-layout .image-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .split-layout .image-side img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 16px;
+      object-fit: contain;
+    }
+
+    @media (max-width: 1024px) {
+      .slide {
+        height: auto;
+        min-height: 100vh;
+      }
+      .split-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        height: auto;
+      }
+      .split-layout .text-side {
+        max-height: none;
+        overflow-y: visible;
+      }
+      .split-layout .image-side {
+        height: auto;
+      }
+      .split-layout .image-side img {
+        max-height: 50vh;
+      }
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+      h1 { font-size: 2.4rem; }
+      h2 { font-size: 1.6rem; }
+      .slide { padding: 40px 20px; }
+      .flow { flex-wrap: wrap; }
+    }
+
+    /* Fit to Mac screens (<=900px height) */
+    @media (max-height: 900px) {
+      h1 { font-size: 2.8rem; margin-bottom: 16px; }
+      h2 { font-size: 1.8rem; margin-bottom: 14px; }
+      h3 { font-size: 1.1rem; margin-bottom: 8px; }
+      .subtitle { font-size: 1.1rem; margin-bottom: 24px; }
+      .slide { padding: 24px 40px; }
+      .card { padding: 18px 22px; }
+      .card .icon { font-size: 2rem; margin-bottom: 10px; }
+      .card p { font-size: 0.85rem; }
+      .cards { gap: 16px; margin-top: 20px; }
+      .flow { margin: 16px 0; gap: 8px; }
+      .flow-step { padding: 10px 14px; font-size: 0.85rem; }
+      .flow-arrow { font-size: 1.1rem; }
+      .scenario { padding: 16px 20px; margin: 10px 0; }
+      .scenario-title { font-size: 1rem; margin-bottom: 4px; }
+      .scenario p { font-size: 0.85rem; }
+      .two-col { gap: 20px; margin-top: 16px; }
+      .divider { margin: 16px 0; }
+      .image-placeholder { margin: 16px 0; padding: 20px; }
+      .image-placeholder img { max-height: 22vh; }
+      .split-layout { gap: 20px; }
+      .split-layout .text-side { max-height: calc(100vh - 60px); }
+      .reactions { gap: 12px; }
+      .reaction { padding: 10px 16px !important; }
+      .badge { margin-bottom: 10px; }
+      ul li { padding: 3px 0; }
+      .tag-list { margin-top: 8px; }
+    }
+
+    .divider {
+      width: 60px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      margin: 24px 0;
+    }
+
+    .tag-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .tag {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+    }
+
+    .nav {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav a {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: block;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .nav a:hover, .nav a.active {
+      background: var(--accent);
+      transform: scale(1.3);
+    }
+
+
+    ul { list-style: none; padding: 0; }
+    ul li { padding: 6px 0; color: var(--muted); }
+    ul li::before { content: '→ '; color: var(--accent); font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="#title" title="Title"></a>
+  <a href="#the-why" title="The Why"></a>
+  <a href="#overview" title="Overview"></a>
+  <a href="#architecture" title="Architecture"></a>
+  <a href="#pr-review" title="PR Review"></a>
+  <a href="#dm-assistant" title="DM Assistant"></a>
+  <a href="#mentions" title="@Mentions"></a>
+  <a href="#real-usage" title="Real Usage"></a>
+  <a href="#reactions" title="Reactions"></a>
+  <a href="#demo" title="Demo"></a>
+  <a href="#qa" title="QA"></a>
+  <a href="#how-built" title="How It Was Built"></a>
+</nav>
+
+<!-- SLIDE 1: Title -->
+<section class="slide" id="title">
+  <div class="split-layout">
+    <div class="text-side">
+      <div class="badge badge-red">Internal Tool</div>
+      <h1>Claude Agent<br>Digital Helper</h1>
+      <p class="subtitle" style="margin: 20px 0;">
+        An AI-powered Slack bot that auto-reviews PRs, tracks ideas as Jira tickets,
+        answers questions, and creates tickets from thread conversations.
+      </p>
+      <div class="tag-list">
+        <span class="tag">Slack Bot</span>
+        <span class="tag">Claude Code</span>
+        <span class="tag">PR Reviews</span>
+        <span class="tag">Jira Integration</span>
+        <span class="tag">Docker</span>
+      </div>
+    </div>
+    <div class="image-side">
+      <img src="images/hero.png" alt="Claude Agent — robot reviewing code with Slack windows" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 2: The Why -->
+<section class="slide" id="the-why">
+  <div class="content">
+    <div class="badge badge-purple">The Why</div>
+    <h2>The Problem I Was Solving</h2>
+    <div class="divider"></div>
+
+    <div class="scenario" style="border-left-color: var(--purple); margin-bottom: 24px;">
+      <div class="scenario-title">The Problem</div>
+      <p>We had a growing punch list — bugs spotted in reviews, product ideas floating in Slack, tasks discussed in threads — none of it making it into Jira. Things were getting lost. The backlog was falling behind real conversations.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step">😤 Punch list chaos</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">💬 Chat with Claude</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">🏗️ Architecture ideas</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">⚡ Working bot</div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--accent); margin-top: 24px;">
+      <div class="scenario-title">The Idea</div>
+      <p>What if a Slack bot could watch our conversations and automatically turn them into action — reviewing PRs, capturing ideas as tickets, and creating Jira issues from thread discussions? No forms, no context-switching, just natural language.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: Overview -->
+<section class="slide" id="overview">
+  <div class="split-layout">
+    <div class="text-side">
+<div class="badge badge-blue">What It Does</div>
+      <h2>Three Modes of Operation</h2>
+      <div class="divider"></div>
+      <p class="subtitle">So I built a Slack bot that turns conversations into action — here's what it does.</p>
+      <div class="cards" style="grid-template-columns: 1fr;">
+        <div class="card">
+          <h3>👀 PR Watcher</h3>
+          <p>Monitors channels for GitHub PR links. Auto-reviews code, cross-checks Jira tickets, and gives approve/request-changes verdict.</p>
+        </div>
+        <div class="card">
+          <h3>💬 DM Assistant</h3>
+          <p>Personal AI assistant via DMs. Ideas become Jira tickets, tasks get tracked, questions get answered with full context.</p>
+        </div>
+        <div class="card">
+          <h3>🏷️ @Mention Handler</h3>
+          <p>Tag the bot in any thread to create Jira tickets, update existing ones, or trigger code implementation.</p>
+        </div>
+      </div>
+    </div>
+    <div class="image-side">
+      <img src="images/three-modes.jpg" alt="Three modes — Code Review, Ideas, Task Tracking" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: Architecture -->
+<section class="slide" id="architecture">
+  <div class="split-layout">
+    <div class="text-side">
+<div class="badge badge-purple">Architecture</div>
+      <h2>How It's Built</h2>
+      <div class="divider"></div>
+
+      <div class="flow">
+        <div class="flow-step">📨 Slack Event</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">🔀 Router</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">🧠 Claude Code</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">📤 Response</div>
+      </div>
+
+      <h3>Stack</h3>
+      <ul>
+        <li>Node.js + Slack Bolt SDK (Socket Mode)</li>
+        <li>Claude Code CLI via Docker</li>
+        <li>Skills: GitHub, Atlassian, Figma</li>
+        <li>Memory system with action logs + learnings</li>
+        <li>AWS Bedrock for Claude API</li>
+      </ul>
+
+      <h3 style="margin-top: 16px;">Message Routing</h3>
+      <ul>
+        <li><strong>DM</strong> → Intent Router → (Task / Idea / Implement)</li>
+        <li><strong>Channel msg with PR link</strong> → PR Handler</li>
+        <li><strong>@mention</strong> → Mention Handler → Jira / Update / Implement</li>
+        <li><strong>Thread reply</strong> → Context-aware re-routing</li>
+      </ul>
+    </div>
+    <div class="image-side">
+      <img src="images/architecture.jpg" alt="Architecture — brain node connected to service nodes" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: PR Review -->
+<section class="slide" id="pr-review">
+  <div class="split-layout">
+    <div class="text-side">
+      <div class="badge badge-green">Core Feature</div>
+      <h2>Automatic PR Reviews</h2>
+      <div class="divider"></div>
+
+      <p class="subtitle">Drop a PR link in any channel. The bot reviews the diff, cross-checks the linked Jira ticket, and posts a verdict — all in the thread.</p>
+
+      <div class="flow">
+        <div class="flow-step">🔗 PR Link</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">👀 Eyes</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">🔍 Review + Jira</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">👍 / ⚠️</div>
+      </div>
+
+      <h3>What It Does</h3>
+      <ul>
+        <li>Reads the diff via the GitHub skill, posts a full review in-thread</li>
+        <li>Detects ticket numbers (e.g. <code>RTL-1333</code>) and verifies code matches the AC</li>
+        <li>Re-review on follow-up: clears old reactions, re-reads with thread context</li>
+        <li>Thread Q&A — answer follow-ups using diff + thread history</li>
+        <li>Already merged? Adds a merge reaction and skips the review</li>
+        <li>Filters its own replies to avoid infinite review loops</li>
+      </ul>
+
+      <div class="scenario" style="border-left-color: var(--blue); margin-top: 16px;">
+        <div class="scenario-title">Completion Guarantee</div>
+        <p>Every review must end with <code>---REVIEW_COMPLETE---</code>. Missing or empty body → automatic retry, then a ⚠️ "please review manually" fallback.</p>
+      </div>
+    </div>
+    <div class="image-side">
+      <img src="images/pr-review.jpg" alt="Robot reviewing code with magnifying glass" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 6: DM Assistant -->
+<section class="slide" id="dm-assistant">
+  <div class="split-layout">
+    <div class="text-side">
+<div class="badge badge-orange">Personal Assistant</div>
+      <h2>DM — Intent-Based Routing</h2>
+      <div class="divider"></div>
+
+      <p class="subtitle">Message the bot directly. It classifies your intent and routes accordingly.</p>
+
+      <div class="cards" style="grid-template-columns: 1fr;">
+        <div class="card" style="border-top: 3px solid var(--orange);">
+          <h3>💡 IDEA</h3>
+          <p>"What if we added dark mode?" — bot creates a Jira Story with <code>(IDEA)</code> prefix.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--blue);">
+          <h3>📋 TASK</h3>
+          <p>"Update the CI pipeline to cache node_modules" — bot creates a Jira Task with <code>(TASK)</code> prefix.</p>
+        </div>
+        <div class="card" style="border-top: 3px solid var(--green);">
+          <h3>⚡ IMPLEMENT</h3>
+          <p>"How do I configure CORS in Express?" — bot answers directly, no ticket created.</p>
+        </div>
+      </div>
+
+      <div class="scenario" style="border-left-color: var(--orange);">
+        <div class="scenario-title">Thread Conversations</div>
+        <p>Reply in a thread to continue the conversation. Full thread history is maintained — no intent routing needed for follow-ups.</p>
+      </div>
+    </div>
+    <div class="image-side">
+      <img src="images/dm-assistant.jpg" alt="DM message flowing through pipeline to AI cognitive engine" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7: @Mention Handler -->
+<section class="slide" id="mentions">
+  <div class="split-layout">
+    <div class="text-side">
+<div class="badge badge-purple">Channel Power</div>
+      <h2>@Mention — Thread to Ticket</h2>
+      <div class="divider"></div>
+
+      <p class="subtitle">Turn any Slack conversation into a tracked Jira ticket with one @mention.</p>
+
+      <div class="flow">
+        <div class="flow-step">💬 Thread</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">🏷️ @bot</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">📎 Attach</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">🔗 Ticket</div>
+      </div>
+
+      <h3>What It Captures</h3>
+      <ul>
+        <li>Full thread conversation as ticket description</li>
+        <li>Attached files (images, docs) → Jira attachments</li>
+        <li>Permalink back to original Slack thread</li>
+        <li>Proper issue type (Story, Bug, Task, Spike)</li>
+      </ul>
+
+      <h3 style="margin-top: 16px;">Follow-Up Actions</h3>
+      <ul>
+        <li>@mention again → update the existing ticket</li>
+        <li>"implement it" → bot reads ticket, writes code, opens PR</li>
+        <li>"fix it" → same implementation flow</li>
+      </ul>
+    </div>
+    <div class="image-side">
+      <img src="images/mention.jpg" alt="@Mention — Create, Update, Implement" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Real Usage -->
+<section class="slide" id="real-usage">
+  <div class="content">
+
+    <div class="badge badge-red">From the Logs</div>
+    <h2>How the Team Actually Uses It</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">Pulled from real action logs and learnings — not hypothetical.</p>
+
+    <div class="cards" style="grid-template-columns: 1fr 1fr;">
+      <div class="scenario">
+        <div class="scenario-title">🔍 Jira-anchored PR reviews</div>
+        <p>Bot regularly cross-checks PRs in <code>lead-enrichment</code>, <code>site-dealer-dashboard</code>, <code>cg-main</code>, <code>dealer-crm</code> against RTL / DEXP / MIT / CMI tickets. Flags real issues — e.g. PR #386 (RTL-1333): fix targeted symptom not root cause; PR #470 (RTL-1298): catches an <code>Aggregation.project()</code> lambda whose mocked test never executed.</p>
+      </div>
+      <div class="scenario">
+        <div class="scenario-title">🔄 Multi-round re-reviews</div>
+        <p>PR #372 (MIT-844) went 3 rounds — round 2 caught a TypeScript failure in the spec file (<code>id: '1'</code> vs <code>number</code>, invalid <code>priority: 'NORMAL'</code>) the author missed. Round 3 confirmed all feedback addressed.</p>
+      </div>
+      <div class="scenario">
+        <div class="scenario-title">🎯 Deep cross-spec validation</div>
+        <p>PR #492 (RTL-1328): bot flagged 3 deviations from the §2.3 / §10 / §12.3 spec — including coin counts derived via in-memory aggregation rather than the documented <code>$inc</code> path, with a perf note for scale.</p>
+      </div>
+      <div class="scenario">
+        <div class="scenario-title">✅ Reaction flips on demand</div>
+        <p>"want to change the icon then?" → bot finds the original PR-link message in <code>C07HU6W90MV</code>, swaps ⚠️ → ✅ via <code>reactions.remove</code> + <code>reactions.add</code>. Routine on PRs #464, #480, #481, #483, #487 once carve-outs are agreed.</p>
+      </div>
+      <div class="scenario">
+        <div class="scenario-title">⚡ Ticket → branch → PR end-to-end</div>
+        <p>RTL-1314 (copy update) and RTL-1315 (endpoint migration) implemented from a Slack thread: bot branched, edited, ran vitest, pushed, opened PRs #344 / #348, then auto-reviewed both against AC.</p>
+      </div>
+      <div class="scenario">
+        <div class="scenario-title">🩹 Conflict resolution</div>
+        <p>PR #185 (RTL-1193): merged origin/main, resolved conflicts in 4 files (package.json, ShopperCard.tsx + spec, yarn.lock), switched <code>Link</code> source from <code>react-router-dom</code> to <code>@remix-run/react</code> to match main, 903 tests green, pushed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 9: Reactions -->
+<section class="slide" id="reactions">
+  <div class="content">
+
+    <div class="badge badge-blue">Visual Feedback</div>
+    <h2>Reaction Language</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">The bot communicates PR status through emoji reactions — scannable at a glance.</p>
+
+    <div class="reactions" style="flex-direction: column; gap: 20px;">
+      <div class="reaction" style="padding: 16px 24px;">
+        <span class="emoji">👀</span>
+        <div>
+          <strong>Eyes</strong> — Processing. Bot is actively reviewing the PR.
+        </div>
+      </div>
+      <div class="reaction" style="padding: 16px 24px;">
+        <span class="emoji">👍</span>
+        <div>
+          <strong>Thumbs Up</strong> — Approved. Code looks good, recommend merging.
+        </div>
+      </div>
+      <div class="reaction" style="padding: 16px 24px;">
+        <span class="emoji">⚠️</span>
+        <div>
+          <strong>Warning</strong> — Changes Requested. Issues found that should be addressed before merge.
+        </div>
+      </div>
+      <div class="reaction" style="padding: 16px 24px;">
+        <span class="emoji"><img src="images/merge-icon.png" alt="merge" style="width:28px;height:28px;vertical-align:middle;" /></span>
+        <div>
+          <strong>Merge</strong> — Already Merged. PR was merged before review started; no action needed.
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--blue); margin-top: 32px;">
+      <div class="scenario-title">Re-Review Cleanup</div>
+      <p>When a re-review is triggered, the bot removes all previous reactions first, then adds fresh ones based on the new review. No stale signals.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Demo -->
+<section class="slide" id="demo">
+  <div class="content">
+
+    <div class="badge badge-green">Live Demo</div>
+    <h2>See It In Action</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">A walk through real conversations — ticket creation and auto PR reviews.</p>
+
+    <div class="cards" style="grid-template-columns: 1fr 1fr;">
+      <div class="card" style="border-top: 3px solid var(--orange);">
+        <div class="icon">📝</div>
+        <h3>Demo 1 — Ticket Creation</h3>
+        <p>Real Slack conversations turning into Jira tickets — DMs classified as IDEA / TASK, threads captured via @mention with the full discussion + attachments as the description.</p>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--green);">
+        <div class="icon">👀</div>
+        <h3>Demo 2 — Auto PR Reviews</h3>
+        <p>PR links from real channels: bot reacts 👀, reviews the diff, cross-checks the Jira ticket, posts a verdict, and handles re-reviews / Q&A in-thread.</p>
+      </div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--green); margin-top: 32px;">
+      <div class="scenario-title">What to Watch For</div>
+      <p>How naturally the bot picks up context from a thread, the emoji reactions as status signals, and how often a single Slack message is enough to land a tracked ticket or a complete review.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 12: QA -->
+<section class="slide" id="qa">
+  <div class="content" style="text-align: center;">
+    <div class="badge badge-red">Q&A</div>
+    <h2>Questions?</h2>
+    <div class="divider" style="margin: 24px auto;"></div>
+    <div class="image-placeholder" style="border: none; background: none; padding: 0;">
+      <img src="images/qa.jpg" alt="Robot holding microphone toward audience for Q&A" style="max-height: 60vh;" />
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 14: How It Was Built -->
+<section class="slide" id="how-built">
+  <div class="content">
+
+    <div class="badge badge-purple">Origin Story</div>
+    <h2>How It Was Built</h2>
+    <div class="divider"></div>
+
+    <p class="subtitle">No code written. Just ideas and conversation.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>The Process</h3>
+        <ul>
+          <li>Described the problem in plain language to Claude Code</li>
+          <li>Discussed what integrations we had (Slack, Jira, GitHub)</li>
+          <li>Asked "what's the simplest architecture for this?"</li>
+          <li>Iterated on routing logic through conversation</li>
+          <li>Claude wrote all the code — I reviewed intent and direction</li>
+          <li>No IDE, no local dev setup, no debugging sessions</li>
+        </ul>
+      </div>
+      <div>
+        <h3>What I Actually Did</h3>
+        <ul>
+          <li>Described the business problem clearly</li>
+          <li>Defined what "done" looks like for each feature</li>
+          <li>Asked the right questions about edge cases</li>
+          <li>Tested the running bot and gave feedback</li>
+          <li>Decided what was worth building vs skipping</li>
+          <li>That's it. Zero lines of code written by hand.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="scenario" style="border-left-color: var(--accent); margin-top: 32px;">
+      <div class="scenario-title">The Takeaway</div>
+      <p>The value wasn't in writing code faster. It was in being able to go from "this workflow is broken" to "working tool in production" in a single conversation. AI as a thought partner that also happens to implement the ideas.</p>
+    </div>
+  </div>
+</section>
+
+<div class="fullscreen-hint">Press <strong>Ctrl+F</strong> to exit fullscreen &bull; Arrow keys to navigate</div>
+<div class="slide-counter"></div>
+<div class="fullscreen-toast" id="fsToast"></div>
+
+<script>
+  // Highlight active nav dot on scroll
+  const sections = document.querySelectorAll('.slide');
+  const navLinks = document.querySelectorAll('.nav a');
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { threshold: 0.5 });
+  
+  sections.forEach(section => observer.observe(section));
+
+  // Fullscreen mode
+  let currentSlide = 0;
+  const slideCount = sections.length;
+  const slideCounter = document.querySelector('.slide-counter');
+  const fsToast = document.getElementById('fsToast');
+
+  function updateSlideCounter() {
+    slideCounter.textContent = `${currentSlide + 1} / ${slideCount}`;
+  }
+
+  // Show counter on load
+  updateSlideCounter();
+
+  function showToast(msg) {
+    fsToast.textContent = msg;
+    fsToast.classList.add('show');
+    setTimeout(() => fsToast.classList.remove('show'), 1200);
+  }
+
+  function getCurrentSlideIndex() {
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const vh = window.innerHeight;
+    return Math.round(scrollTop / vh);
+  }
+
+  function goToSlide(index) {
+    if (index < 0) index = 0;
+    if (index >= slideCount) index = slideCount - 1;
+    currentSlide = index;
+    sections[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    updateSlideCounter();
+  }
+
+  function toggleFullscreen() {
+    const body = document.body;
+    body.classList.toggle('fullscreen');
+
+    if (body.classList.contains('fullscreen')) {
+      currentSlide = getCurrentSlideIndex();
+      updateSlideCounter();
+      showToast('Fullscreen Mode');
+      // Enter browser fullscreen
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+    } else {
+      showToast('Normal Mode');
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+  }
+
+  // Sync when exiting fullscreen via Escape
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('fullscreen')) {
+      document.body.classList.remove('fullscreen');
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement && document.body.classList.contains('fullscreen')) {
+      document.body.classList.remove('fullscreen');
+    }
+  });
+
+  // Keyboard controls
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+F to toggle fullscreen
+    if (e.ctrlKey && e.key === 'f') {
+      e.preventDefault();
+      toggleFullscreen();
+      return;
+    }
+
+    // Arrow key navigation (works in both modes, extra useful in fullscreen)
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault();
+      currentSlide = getCurrentSlideIndex();
+      goToSlide(currentSlide + 1);
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      currentSlide = getCurrentSlideIndex();
+      goToSlide(currentSlide - 1);
+    }
+    if (e.key === 'Home') {
+      e.preventDefault();
+      goToSlide(0);
+    }
+    if (e.key === 'End') {
+      e.preventDefault();
+      goToSlide(slideCount - 1);
+    }
+  });
+
+  // Update counter on scroll
+  let scrollTimer;
+  document.addEventListener('scroll', () => {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      currentSlide = getCurrentSlideIndex();
+      updateSlideCounter();
+    }, 100);
+  });
+</script>
+
+</body>
+</html>
